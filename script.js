@@ -3,7 +3,7 @@
    Enhancements:
    1) City Addition = two-stage narration (Baseline → Proposal) with the
       Guwahati hub icon + movements revealed only at the proposal stage.
-   2) During City Addition (both baseline and proposal), the rest of India
+   2) During City Addition (both baseline and proposal), the rest of IndiaShow
       continues moving as-is (base network trucks kept running), and in the
       proposal stage we also keep Kolkata ↔ Guwahati movements visible.
    ======================================================================= */
@@ -66,9 +66,9 @@ RP["H_JOG-WH4"] = [...RP["WH4-H_JOG"]].reverse();
 
 /* -------------------- Indonesia-specific toggles -------------------- */
 /* We drop the India NE-city logic. Keep the flags defined but inert. */
-let SHOW_HUB = false;
-let SHOW_NE = false;          // unused
-let SHOW_HUB_CITY = false;    // unused
+/*let SHOW_HUB = false;
+/*let SHOW_NE = false;          // unused
+/*let SHOW_HUB_CITY = false;    // unused
 
 /* -------------------- Disruption steps (Java) -------------------- */
 const STEPS = [
@@ -925,6 +925,7 @@ async function fetchOrDefault(file, fallback){
 }
 function tick(){ const now=performance.now(); const dt=Math.min(0.05,(now-__lastTS)/1000); __lastTS=now; __dt=dt; drawFrame(); requestAnimationFrame(tick); }
 requestAnimationFrame(tick);
+
 
 
 
