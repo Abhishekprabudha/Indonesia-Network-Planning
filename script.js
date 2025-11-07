@@ -20,170 +20,142 @@ function debug(msg){
 }
 window.addEventListener("error",(e)=>debug(`Error: ${e.message||e}`));
 
-/* -------------------- config -------------------- */
-const STYLE_URL="style.json";
-const MAP_INIT={center:[78.9629,21.5937],zoom:5.5,minZoom:3,maxZoom:12};
-const WAREHOUSE_ICON_SRC="warehouse_iso.png";
-const AUTO_FIT=false; // keep OFF
-const HUB_ID="H_NAG";
-const DEFAULT_CAPACITY_UNITS=10;
-const DEFAULT_SPEED_KMPH=55;
+/* -------------------- config (INDONESIA / JAVA) -------------------- */
+const STYLE_URL = "style.json";
+const MAP_INIT = { center: [110.0, -7.2], zoom: 6.6, minZoom: 3, maxZoom: 12 }; // Java focus
+const WAREHOUSE_ICON_SRC = "warehouse_iso.png";
+const AUTO_FIT = false;
+const HUB_ID = "H_JOG";                   // Yogyakarta hub
+const DEFAULT_CAPACITY_UNITS = 10;
+const DEFAULT_SPEED_KMPH = 55;
 
-/* -------------------- anchors -------------------- */
-const CITY={
-  WH1:{name:"WH1 — Delhi",     lat:28.6139, lon:77.2090},
-  WH2:{name:"WH2 — Mumbai",    lat:19.0760, lon:72.8777},
-  WH3:{name:"WH3 — Bangalore", lat:12.9716, lon:77.5946},
-  WH4:{name:"WH4 — Hyderabad", lat:17.3850, lon:78.4867},
-  WH5:{name:"WH5 — Kolkata",   lat:22.5726, lon:88.3639}
+/* -------------------- anchors (Java island) -------------------- */
+const CITY = {
+  WH1: { name: "WH1 — Jakarta",  lat: -6.2088, lon: 106.8456 },
+  WH2: { name: "WH2 — Surabaya", lat: -7.2575, lon: 112.7521 },
+  WH3: { name: "WH3 — Bandung",  lat: -6.9175, lon: 107.6191 },
+  WH4: { name: "WH4 — Semarang", lat: -6.9667, lon: 110.4167 }
 };
-const HUB={ H_NAG:{name:"Hub — Nagpur", lat:21.1458, lon:79.0882} };
 
-/* ---- Seven Sisters anchors + Guwahati hub ---- */
-const NE7 = {
-  NE_AP:{ name:"Itanagar — Arunachal Pradesh", lat:27.0844, lon:93.6053 },
-  NE_AS:{ name:"Guwahati — Assam",             lat:26.1445, lon:91.7362 },
-  NE_MN:{ name:"Imphal — Manipur",             lat:24.8170, lon:93.9368 },
-  NE_ML:{ name:"Shillong — Meghalaya",         lat:25.5788, lon:91.8933 },
-  NE_MZ:{ name:"Aizawl — Mizoram",             lat:23.7271, lon:92.7176 },
-  NE_NL:{ name:"Kohima — Nagaland",            lat:25.6747, lon:94.1100 },
-  NE_TR:{ name:"Agartala — Tripura",           lat:23.8315, lon:91.2868 }
+// Central hub (Yogyakarta)
+const HUB = { H_JOG: { name: "Hub — Yogyakarta", lat: -7.7956, lon: 110.3695 } };
+
+/* -------------------- (Java) route polylines (lat,lon) -------------------- */
+/* These are gently-curved approximations for road-like visuals. */
+const RP = {
+  // Main corridors
+  "WH1-WH3": [ [-6.2088,106.8456], [-6.42,107.05], [-6.65,107.35], [-6.9175,107.6191] ],                // Jakarta ↔ Bandung
+  "WH3-WH4": [ [-6.9175,107.6191], [-6.94,108.7], [-6.95,109.6], [-6.9667,110.4167] ],                   // Bandung ↔ Semarang
+  "WH4-WH2": [ [-6.9667,110.4167], [-7.20,111.5], [-7.25,112.2], [-7.2575,112.7521] ],                   // Semarang ↔ Surabaya
+  "WH1-WH4": [ [-6.2088,106.8456], [-6.40,108.2], [-6.75,109.5], [-6.9667,110.4167] ],                   // Jakarta ↔ Semarang
+  "WH1-WH2": [ [-6.2088,106.8456], [-6.60,108.8], [-6.95,110.4], [-7.10,111.6], [-7.2575,112.7521] ],    // Jakarta ↔ Surabaya (via north trunk)
+  "WH3-WH2": [ [-6.9175,107.6191], [-7.05,108.3], [-7.10,109.9], [-7.20,111.0], [-7.2575,112.7521] ],    // Bandung ↔ Surabaya
+
+  // Hub spokes (Yogyakarta)
+  "WH1-H_JOG": [ [-6.2088,106.8456], [-6.60,108.2], [-6.95,109.8], [-7.40,110.2], [-7.7956,110.3695] ],
+  "WH2-H_JOG": [ [-7.2575,112.7521], [-7.25,112.2], [-7.20,111.5], [-7.40,110.9], [-7.7956,110.3695] ],
+  "WH3-H_JOG": [ [-6.9175,107.6191], [-7.05,108.3], [-7.20,109.4], [-7.50,110.0], [-7.7956,110.3695] ],
+  "WH4-H_JOG": [ [-6.9667,110.4167], [-7.20,110.45], [-7.50,110.40], [-7.7956,110.3695] ]
 };
-const HUB_CITY = { H_GUW:{ name:"Hub — Guwahati", lat:26.1445, lon:91.7362 } };
 
-/* -------------------- route polylines (lat,lon) -------------------- */
-const RP={
-  "WH1-WH2":[[28.6139,77.2090],[27.0,76.8],[25.6,75.2],[24.1,73.5],[23.0,72.6],[21.17,72.83],[19.9,72.9],[19.076,72.8777]],
-  "WH2-WH3":[[19.0760,72.8777],[18.52,73.8567],[16.9,74.5],[15.9,74.5],[13.8,76.4],[12.9716,77.5946]],
-  "WH3-WH1":[[12.9716,77.5946],[16.0,78.1],[17.3850,78.4867],[21.0,79.1],[26.9,78.0],[28.6139,77.2090]],
-  "WH4-WH1":[[17.3850,78.4867],[21.1458,79.0882],[27.1767,78.0081],[28.6139,77.2090]],
-  "WH4-WH2":[[17.3850,78.4867],[18.0,76.5],[18.52,73.8567],[19.0760,72.8777]],
-  "WH4-WH3":[[17.3850,78.4867],[16.0,77.8],[14.8,77.3],[13.34,77.10],[12.9716,77.5946]],
-  "WH4-WH5":[[17.3850,78.4867],[18.0,82.0],[19.2,84.8],[21.0,86.0],[22.5726,88.3639]],
-  "WH5-WH1":[[22.5726,88.3639],[23.6,86.1],[24.3,83.0],[25.4,81.8],[26.45,80.35],[27.1767,78.0081],[28.6139,77.2090]],
-  "WH5-WH2":[[22.5726,88.3639],[23.5,86.0],[22.5,84.0],[21.5,81.5],[21.1,79.0],[20.3,76.5],[19.3,74.5],[19.0760,72.8777]],
-  "WH5-WH3":[[22.5726,88.3639],[21.15,85.8],[19.5,85.8],[17.9,82.7],[16.5,80.3],[13.3409,77.1010],[12.9716,77.5946]]
-};
-/* Hub spokes (Nagpur) — included only in Hub mode */
-RP["WH1-H_NAG"]=[[28.6139,77.2090],[26.5,78.2],[24.7,79.0],[22.8,79.2],[21.1458,79.0882]];
-RP["WH2-H_NAG"]=[[19.0760,72.8777],[19.6,74.8],[20.2,76.9],[20.7,78.4],[21.1458,79.0882]];
-RP["WH3-H_NAG"]=[[12.9716,77.5946],[14.6,78.6],[16.8,79.3],[19.0,79.4],[21.1458,79.0882]];
-RP["WH4-H_NAG"]=[[17.3850,78.4867],[18.6,78.9],[19.8,79.2],[20.6,79.2],[21.1458,79.0882]];
-RP["WH5-H_NAG"]=[[22.5726,88.3639],[21.7,86.4],[21.2,83.8],[21.2,81.5],[21.1458,79.0882]];
+// Helper to add hub spokes to the RP object if not present in code below
+RP["H_JOG-WH1"] = [...RP["WH1-H_JOG"]].reverse();
+RP["H_JOG-WH2"] = [...RP["WH2-H_JOG"]].reverse();
+RP["H_JOG-WH3"] = [...RP["WH3-H_JOG"]].reverse();
+RP["H_JOG-WH4"] = [...RP["WH4-H_JOG"]].reverse();
 
-/* ---- Curved roads for City Addition ---- */
-/* Baseline: WH5 → Seven Sisters (gentle bends for road-like look) */
-RP["WH5-NE_AP"]=[[22.5726,88.3639],[24.5,89.0],[26.0,92.0],[27.0844,93.6053]];
-RP["WH5-NE_AS"]=[[22.5726,88.3639],[24.2,89.6],[25.5,90.8],[26.1445,91.7362]];
-RP["WH5-NE_MN"]=[[22.5726,88.3639],[23.5,90.4],[24.0,92.0],[24.8170,93.9368]];
-RP["WH5-NE_ML"]=[[22.5726,88.3639],[23.8,90.2],[24.8,91.2],[25.5788,91.8933]];
-RP["WH5-NE_MZ"]=[[22.5726,88.3639],[23.0,90.0],[23.4,91.3],[23.7271,92.7176]];
-RP["WH5-NE_NL"]=[[22.5726,88.3639],[24.3,89.7],[25.0,92.0],[25.6747,94.1100]];
-RP["WH5-NE_TR"]=[[22.5726,88.3639],[23.2,89.0],[23.5,90.2],[23.8315,91.2868]];
+/* -------------------- Indonesia-specific toggles -------------------- */
+/* We drop the India NE-city logic. Keep the flags defined but inert. */
+let SHOW_HUB = false;
+let SHOW_NE = false;          // unused
+let SHOW_HUB_CITY = false;    // unused
 
-/* Proposal: H_GUW → Seven Sisters (fan-out) + WH5 ↔ H_GUW */
-RP["WH5-H_GUW"]=[[22.5726,88.3639],[24.0,89.8],[25.2,90.8],[26.1445,91.7362]];
-RP["H_GUW-NE_AP"]=[[26.1445,91.7362],[26.7,92.2],[27.0844,93.6053]];
-RP["H_GUW-NE_MN"]=[[26.1445,91.7362],[25.6,92.4],[24.8170,93.9368]];
-RP["H_GUW-NE_ML"]=[[26.1445,91.7362],[25.9,91.8],[25.5788,91.8933]];
-RP["H_GUW-NE_MZ"]=[[26.1445,91.7362],[25.0,92.0],[23.7271,92.7176]];
-RP["H_GUW-NE_NL"]=[[26.1445,91.7362],[25.8,92.6],[25.6747,94.1100]];
-RP["H_GUW-NE_TR"]=[[26.1445,91.7362],[25.0,91.3],[23.8315,91.2868]];
-
-/* NOTE: RP contains NE fan-outs, but we hide them from the base network;
-   they’re added only when City Addition is active. */
-
-const keyFor=(a,b)=>`${a}-${b}`;
-const toLonLat=ll=>ll.map(p=>[p[1],p[0]]);
-function getAnchor(id){
-  return CITY[id] || HUB[id] || NE7[id] || HUB_CITY[id];
-}
-function getRoadLatLon(a,b){
-  const k1=keyFor(a,b), k2=keyFor(b,a);
-  if(RP[k1]) return RP[k1];
-  if(RP[k2]) return [...RP[k2]].reverse();
-  const ca=getAnchor(a)||{lat:21.1458,lon:79.0882};
-  const cb=getAnchor(b)||{lat:21.1458,lon:79.0882};
-  return [[ca.lat,ca.lon],[cb.lat,cb.lon]];
-}
-function expandIDsToLatLon(ids){
-  const out=[];
-  for(let i=0;i<ids.length-1;i++){
-    const seg=getRoadLatLon(ids[i],ids[i+1]);
-    if(i>0) seg.shift();
-    out.push(...seg);
+/* -------------------- Disruption steps (Java) -------------------- */
+const STEPS = [
+  { id: "D1",
+    route:   ["WH1","WH2"],                                 // Jakarta ↔ Surabaya
+    reroute: [["WH1","WH4"],["WH4","WH2"]],                 // divert via Semarang
+    cause: [
+      "Disruption one.",
+      "Jakarta ↔ Surabaya corridor is blocked near Pekalongan.",
+      "All trucks on this corridor are safely paused.",
+      "Please click the Correct button to apply the AI detour via Semarang."
+    ],
+    fix: [
+      "AI has corrected the disruption.",
+      "We’re rerouting via Jakarta → Semarang → Surabaya.",
+      "Green links show the new safe detour. Flows are resuming."
+    ]
+  },
+  { id: "D2",
+    route:   ["WH3","WH4"],                                 // Bandung ↔ Semarang
+    reroute: [["WH3","WH1"],["WH1","WH4"]],                 // via Jakarta
+    cause: [
+      "Disruption two.",
+      "Bandung ↔ Semarang faces lane closures in mid-Java.",
+      "Trucks are paused in place on this corridor.",
+      "Click Correct to rebalance via Jakarta."
+    ],
+    fix: [
+      "AI has corrected the disruption.",
+      "We divert Bandung → Jakarta → Semarang.",
+      "Green segments confirm the detour is active."
+    ]
+  },
+  { id: "D3",
+    route:   ["WH3","WH2"],                                 // Bandung ↔ Surabaya
+    reroute: [["WH3","WH4"],["WH4","WH2"]],                 // via Semarang
+    cause: [
+      "Disruption three.",
+      "Bandung ↔ Surabaya constrained by a long work zone.",
+      "All trucks on this link are held.",
+      "Click Correct to divert through Semarang."
+    ],
+    fix: [
+      "AI has corrected the disruption.",
+      "We route Bandung → Semarang → Surabaya.",
+      "Green links indicate the detour now in effect."
+    ]
   }
-  return out;
-}
-
-/* Build base network; when includeHub=false, hide hub spokes.
-   IMPORTANT: exclude ANY NE_* or H_GUW links from the base set; they are added only in City Addition. */
-function networkGeoJSON(includeHub){
-  const keys=Object.keys(RP).filter(k=>
-      (includeHub || !k.includes("H_NAG")) &&         // hide Nagpur spokes unless Hub mode
-      !k.includes("H_GUW") &&                         // never include Guwahati links in base
-      !k.includes("NE_")                              // never include Seven Sisters links in base
-  );
-  const features=keys.map(k=>({
-    type:"Feature",properties:{id:k},geometry:{type:"LineString",coordinates:toLonLat(RP[k])}
-  }));
-
-  if (SHOW_NE && !SHOW_HUB_CITY) {
-    // Baseline fan-out from Kolkata (explicit curved RPs above)
-    for (const id of Object.keys(NE7)) {
-      const k = `WH5-${id}`;
-      const coords = RP[k] ? RP[k] : getRoadLatLon("WH5", id);
-      features.push({ type:"Feature", properties:{id:k}, geometry:{type:"LineString",coordinates:toLonLat(coords)} });
-    }
-  } else if (SHOW_NE && SHOW_HUB_CITY) {
-    // Proposal: WH5 ↔ H_GUW + H_GUW → NE_* (skip NE_AS self-link)
-    features.push({
-      type:"Feature", properties:{id:"WH5-H_GUW"},
-      geometry:{type:"LineString",coordinates:toLonLat(getRoadLatLon("WH5","H_GUW"))}
-    });
-    for (const id of Object.keys(NE7)) {
-      if (id === "NE_AS") continue;
-      const k = `H_GUW-${id}`;
-      const coords = RP[k] ? RP[k] : getRoadLatLon("H_GUW", id);
-      features.push({ type:"Feature", properties:{id:k}, geometry:{type:"LineString",coordinates:toLonLat(coords)} });
-    }
-  }
-  return {type:"FeatureCollection",features};
-}
-
-/* -------------------- scenarios -------------------- */
-let SCN_BEFORE=null, SCN_AFTER=null, SCN_HUB=null;
-let SCN_CITY_BASE=null, SCN_CITY_AFTER=null;
-
-/* -------------------- default scenario (fallback) -------------------- */
-const DEFAULT_BEFORE={
-  warehouses:Object.keys(CITY).map(id=>({id,location:CITY[id].name.split("—")[1].trim(),inventory:500})),
-  trucks:[
-    {id:"T1", origin:"WH1", destination:"WH2", status:"On-Time", delay_hours:0, units:3, speed_kmph:55, od:"WH1-WH2"},
-    {id:"T2", origin:"WH2", destination:"WH3", status:"On-Time", delay_hours:0, units:3, speed_kmph:55, od:"WH2-WH3"},
-    {id:"T3", origin:"WH3", destination:"WH1", status:"On-Time", delay_hours:0, units:3, speed_kmph:55, od:"WH3-WH1"}
-  ],
-  policies:{ capacity_units:10, default_speed_kmph:55, use_hub:false }
-};
-
-/* -------------------- Disruption steps -------------------- */
-const STEPS=[
-  {id:"D1",route:["WH1","WH2"],reroute:[["WH1","WH4"],["WH4","WH2"]],
-   cause:["Disruption one.","Delhi to Mumbai corridor is closed near Rajasthan.","All trucks on this corridor are safely paused.","Please click the Correct button to apply the AI fix."],
-   fix:["AI has corrected the disruption.","Traffic is rerouted via Hyderabad: Delhi to Hyderabad, then Hyderabad to Mumbai.","Green links show the new safe detour. Flows are resuming."]},
-  {id:"D2",route:["WH1","WH4"],reroute:[["WH1","WH2"],["WH2","WH4"]],
-   cause:["Disruption two.","Delhi to Hyderabad is impacted by a long work zone.","All trucks on this corridor are paused in place.","Click Correct to rebalance via Mumbai."],
-   fix:["AI has corrected the disruption.","We are diverting Delhi to Mumbai, and then Mumbai to Hyderabad.","Green segments confirm the balanced detour is active."]},
-  {id:"D3",route:["WH5","WH2"],reroute:[["WH5","WH4"],["WH4","WH2"]],
-   cause:["Disruption three.","Kolkata to Mumbai is constrained by flood-prone sections.","All trucks on this link are held.","Click Correct to divert through Hyderabad."],
-   fix:["AI has corrected the disruption.","We route Kolkata to Hyderabad and onward to Mumbai.","Green links indicate the detour now in effect."]},
-  {id:"D4",route:["WH2","WH3"],reroute:[["WH2","WH4"],["WH4","WH3"]],
-   cause:["Disruption four.","Mumbai to Bangalore faces a crash-related closure.","All trucks on this corridor are paused.","Click Correct to go via Hyderabad."],
-   fix:["AI has corrected the disruption.","Detour is Mumbai to Hyderabad, then Hyderabad to Bangalore.","Green links show the new route. Queues are clearing."]},
-  {id:"D5",route:["WH5","WH3"],reroute:[["WH5","WH4"],["WH4","WH3"]],
-   cause:["Final disruption.","Kolkata to Bangalore is blocked due to a landslide risk.","All trucks on this corridor are paused.","Click Correct to proceed with the safe detour."],
-   fix:["AI has corrected the disruption.","We divert Kolkata to Hyderabad and then Hyderabad to Bangalore.","Green links confirm stable flow on the detour."]}
 ];
+
+/* -------------------- City Addition (new market on Java) -------------------- */
+/* Keep your 'City Addition' button. We'll use it to introduce Malang. */
+const NEW_CITY = { id: "C_MLG", name: "Malang", lat: -7.9819, lon: 112.6265 };
+// baseline roads: Surabaya ↔ Malang direct
+RP["WH2-C_MLG"] = [ [-7.2575,112.7521], [-7.65,112.70], [-7.9819,112.6265] ];
+RP["C_MLG-WH2"] = [...RP["WH2-C_MLG"]].reverse();
+// proposal roads: Yogyakarta hub fan-out
+RP["H_JOG-C_MLG"] = [ [-7.7956,110.3695], [-7.80,111.1], [-7.90,112.1], [-7.9819,112.6265] ];
+RP["C_MLG-H_JOG"] = [...RP["H_JOG-C_MLG"]].reverse();
+
+/* ---- override networkGeoJSON to only render Java routes (+optional hub) ---- */
+function networkGeoJSON(includeHub){
+  const keys = Object.keys(RP).filter(k =>
+    (includeHub || !k.includes("H_JOG")) &&    // hide hub spokes unless Hub mode
+    !/C_MLG/.test(k)                           // new city shown only in City Addition
+  );
+  const features = keys.map(k => ({
+    type: "Feature",
+    properties: { id: k },
+    geometry: { type: "LineString", coordinates: toLonLat(RP[k]) }
+  }));
+  return { type: "FeatureCollection", features };
+}
+
+/* -------------------- DEFAULT_BEFORE (Java) -------------------- */
+const DEFAULT_BEFORE = {
+  warehouses: Object.keys(CITY).map(id => ({ id, location: CITY[id].name.split("—")[1].trim(), inventory: 500 })),
+  trucks: [
+    { id: "T1", origin: "WH1", destination: "WH3", status: "On-Time",  delay_hours: 0, units: 3, speed_kmph: 55, od: "WH1-WH3" }, // JKT→BDG
+    { id: "T2", origin: "WH3", destination: "WH4", status: "On-Time",  delay_hours: 0, units: 3, speed_kmph: 55, od: "WH3-WH4" }, // BDG→SMG
+    { id: "T3", origin: "WH4", destination: "WH2", status: "On-Time",  delay_hours: 0, units: 3, speed_kmph: 55, od: "WH4-WH2" }, // SMG→SBY
+    { id: "T4", origin: "WH2", destination: "WH1", status: "Delayed",  delay_hours: 3, units: 3, speed_kmph: 55, od: "WH2-WH1" }, // SBY→JKT (D1 target)
+    { id: "T5", origin: "WH1", destination: "WH2", status: "On-Time",  delay_hours: 0, units: 3, speed_kmph: 55, od: "WH1-WH2" }  // JKT→SBY (D1 target)
+  ],
+  policies: { capacity_units: 10, default_speed_kmph: 55, use_hub: false }
+};
+
 
 /* -------------------- Map setup -------------------- */
 const map=new maplibregl.Map({
@@ -953,5 +925,6 @@ async function fetchOrDefault(file, fallback){
 }
 function tick(){ const now=performance.now(); const dt=Math.min(0.05,(now-__lastTS)/1000); __lastTS=now; __dt=dt; drawFrame(); requestAnimationFrame(tick); }
 requestAnimationFrame(tick);
+
 
 
