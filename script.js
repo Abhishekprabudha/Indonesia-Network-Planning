@@ -366,7 +366,7 @@ function drawFrame(){
         const xO=aO.x+(bO.x-aO.x)*O.t, yO=aO.y+(bO.y-aO.y)*O.t;
         nearest=Math.min(nearest,Math.hypot(xO-x1,yO-y1));
       }
-      if(isFinite(nearest)&&nearest+CROSS_GAP_PX< C ROSS_GAP_PX) step*=Math.max(0.30,(nearest/CROSS_GAP_PX)*0.6);
+      if (isFinite(nearest) && nearest < CROSS_GAP_PX) {   step *= Math.max(0.30, (nearest / CROSS_GAP_PX) * 0.6); }
       step=Math.max(step,MIN_STEP);
 
       T.t+=step;
@@ -820,3 +820,4 @@ async function fetchOrDefault(file, fallback){
 }
 function tick(){ const now=performance.now(); const dt=Math.min(0.05,(now-__lastTS)/1000); __lastTS=now; __dt=dt; drawFrame(); requestAnimationFrame(tick); }
 requestAnimationFrame(tick);
+
